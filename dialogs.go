@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"path/filepath"
 	"strings"
 
 	"cogentcore.org/core/core"
@@ -10,24 +11,20 @@ import (
 	"cogentcore.org/core/texteditor"
 )
 
-func createBucketDialog(path string, button *core.Button) {
+func createBucketDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Create Bucket")
 	core.NewText(d).SetText("Parent Bucket")
-	parent := core.NewTextField(d).SetText(path)
+	parent := core.NewTextField(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("Bucket Name")
 	name := core.NewTextField(d)
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			if strings.Contains(name.Text(), " ") {
-				core.MessageDialog(button, "bucket name cannot contain spaces", "Create Bucket")
-				return
-			}
-			path := []string{}
+			path := Path{}
 			if parent.Text() != "" {
-				path = strings.Split(parent.Text(), " ")
+				stringToPath(parent.Text())
 			}
-			path = append(path, name.Text())
+			path = append(path, []byte(name.Text()))
 			if _, err := CreateBucket(path); err != nil {
 				core.ErrorDialog(button, err, "Create Bucket")
 				return
@@ -38,15 +35,16 @@ func createBucketDialog(path string, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func deleteBucketDialog(path string, button *core.Button) {
+func deleteBucketDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Delete Bucket")
 	core.NewText(d).SetText("Path")
-	deletePath := core.NewTextField(d).SetText(path)
+	core.NewTextField(d).SetText(pathToString(node.Path))
+	//deletePath := core.NewTextField(d).SetText(pathToString(node.Path))
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			path := strings.Split(deletePath.Text(), " ")
-			if err := DeleteBucket(path); err != nil {
+			//path := strings.Split(deletePath.Text(), " ")
+			if err := DeleteBucket(node.Path); err != nil {
 				core.ErrorDialog(button, err, "Delete Bucket")
 				return
 			}
@@ -56,15 +54,14 @@ func deleteBucketDialog(path string, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func emptyBucketDialog(path string, button *core.Button) {
+func emptyBucketDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Empty Bucket")
 	core.NewText(d).SetText("Path")
-	deletePath := core.NewTextField(d).SetText(path)
+	core.NewTextField(d).SetText(pathToString(node.Path))
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			path := strings.Split(deletePath.Text(), " ")
-			if err := EmptyBucket(path); err != nil {
+			if err := EmptyBucket(node.Path); err != nil {
 				core.ErrorDialog(button, err, "Empty Bucket")
 				return
 			}
@@ -74,10 +71,10 @@ func emptyBucketDialog(path string, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func addKeyDialog(path string, button *core.Button) {
+func addKeyDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Add Key")
 	core.NewText(d).SetText("Parent Bucket")
-	parent := core.NewTextField(d).SetText(path)
+	parent := core.NewTextField(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("Key Name")
 	name := core.NewTextField(d)
 	core.NewText(d).SetText("Key Value")
@@ -92,11 +89,7 @@ func addKeyDialog(path string, button *core.Button) {
 			}
 		})
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			if strings.Contains(name.Text(), " ") {
-				core.ErrorDialog(button, errors.New("key name cannot contain spaces"), "Add Key")
-				return
-			}
-			path := strings.Split(parent.Text(), " ")
+			path := stringToPath(parent.Text())
 			if err := CreateKey(name.Text(), toJSON(value.Text()), path); err != nil {
 				core.ErrorDialog(button, err, "Add Key")
 				return
@@ -107,17 +100,17 @@ func addKeyDialog(path string, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func moveBucketDialog(path string, button *core.Button) {
+func moveBucketDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Move Bucket")
 	core.NewText(d).SetText("Current Path")
-	current := core.NewTextField(d).SetText(path)
+	current := core.NewTextField(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("New Path")
 	newPath := core.NewTextField(d)
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			if err := MoveBucket(strings.Split(current.Text(), " "),
-				strings.Split(newPath.Text(), " ")); err != nil {
+			if err := MoveBucket(stringToPath(current.Text()),
+				stringToPath(newPath.Text())); err != nil {
 				core.ErrorDialog(button, err, "Add Key")
 				return
 			}
@@ -127,17 +120,17 @@ func moveBucketDialog(path string, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func moveKeyDialog(path string, button *core.Button) {
+func moveKeyDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Move Key")
 	core.NewText(d).SetText("Current Path")
-	current := core.NewTextField(d).SetText(path)
+	current := core.NewTextField(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("New Path")
 	newPath := core.NewTextField(d)
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			if err := MoveKey(strings.Split(current.Text(), " "),
-				strings.Split(newPath.Text(), " ")); err != nil {
+			if err := MoveKey(stringToPath(current.Text()),
+				stringToPath(newPath.Text())); err != nil {
 				core.ErrorDialog(button, err, "Add Key")
 				return
 			}
@@ -147,14 +140,14 @@ func moveKeyDialog(path string, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func deleteKeyDialog(path string, button *core.Button) {
+func deleteKeyDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Delete Key")
 	core.NewText(d).SetText("Path")
-	deletionPath := core.NewTextField(d).SetText(path)
+	core.NewText(d).SetText(pathToString(node.Path))
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			if err := DeleteKey(strings.Split(deletionPath.Text(), " ")); err != nil {
+			if err := DeleteKey(node.Path); err != nil {
 				core.ErrorDialog(button, err, "Delete Key")
 				return
 			}
@@ -164,13 +157,13 @@ func deleteKeyDialog(path string, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func renameKeyDialog(path string, button *core.Button) {
-	key := strings.Split(path, " ")
+func renameKeyDialog(node TreeNode, button *core.Button) {
+	key := filepath.Base(pathToString(node.Path))
 	d := core.NewBody("Rename Key")
 	core.NewText(d).SetText("Path")
-	core.NewText(d).SetText(strings.Join(key[0:len(key)-1], " "))
+	core.NewText(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("Current Name")
-	core.NewText(d).SetText(key[len(key)-1])
+	core.NewText(d).SetText(key)
 	core.NewText(d).SetText("New Name")
 	newName := core.NewTextField(d)
 	d.AddBottomBar(func(bar *core.Frame) {
@@ -180,7 +173,7 @@ func renameKeyDialog(path string, button *core.Button) {
 				core.ErrorDialog(button, errors.New("key name cannot contain spaces"), "Rename Key")
 				return
 			}
-			if err := RenameKey(key, newName.Text()); err != nil {
+			if err := RenameKey(node.Path, newName.Text()); err != nil {
 				core.ErrorDialog(button, err, "Rename Key")
 				return
 			}
@@ -190,13 +183,12 @@ func renameKeyDialog(path string, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func renameBucketDialog(orig string, button *core.Button) {
-	path := strings.Split(orig, " ")
+func renameBucketDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Rename Bucket")
 	core.NewText(d).SetText("Path")
-	core.NewText(d).SetText(strings.Join(path[0:len(path)-1], " "))
+	core.NewText(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("Current Name")
-	core.NewText(d).SetText(path[len(path)-1])
+	core.NewText(d).SetText(filepath.Base(pathToString(node.Path)))
 	core.NewText(d).SetText("New Name")
 	newName := core.NewTextField(d)
 	d.AddBottomBar(func(bar *core.Frame) {
@@ -206,7 +198,7 @@ func renameBucketDialog(orig string, button *core.Button) {
 				core.ErrorDialog(button, errors.New("bucket name cannot contain spaces"), "Rename Bucket")
 				return
 			}
-			if err := RenameBucket(path, newName.Text()); err != nil {
+			if err := RenameBucket(node.Path, newName.Text()); err != nil {
 				core.ErrorDialog(button, err, "Rename Bucket")
 				return
 			}
@@ -216,16 +208,16 @@ func renameBucketDialog(orig string, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func copyKeyDialog(path string, button *core.Button) {
+func copyKeyDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Copy Key")
 	core.NewText(d).SetText("Key Path")
-	core.NewText(d).SetText(path)
+	core.NewText(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("New Path")
 	newPath := core.NewTextField(d)
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			if err := CopyKey(strings.Split(path, " "), strings.Split(newPath.Text(), " ")); err != nil {
+			if err := CopyKey(node.Path, stringToPath(newPath.Text())); err != nil {
 				core.ErrorDialog(button, err, "Copy Key")
 				return
 			}
@@ -235,16 +227,16 @@ func copyKeyDialog(path string, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func copyBucketDialog(path string, button *core.Button) {
+func copyBucketDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Copy Bucket")
 	core.NewText(d).SetText("Bucket Path")
-	core.NewText(d).SetText(path)
+	core.NewText(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("New Path")
 	newPath := core.NewTextField(d)
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			if err := CopyBucket(strings.Split(path, " "), strings.Split(newPath.Text(), " ")); err != nil {
+			if err := CopyBucket(node.Path, stringToPath(newPath.Text())); err != nil {
 				core.ErrorDialog(button, err, "Copy Bucket")
 				return
 			}

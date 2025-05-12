@@ -15,32 +15,9 @@ import (
 	"cogentcore.org/core/texteditor"
 )
 
-type TreeNode struct {
-	Name     []byte
-	IsBucket bool
-	Value    []byte
-	Path     []string
-	//Click    rect.Rect
-	Children []*TreeNode
-}
-
-type User struct {
-	Name string
-	Pass string
-}
-
-type Item struct {
-	Type   *core.Text
-	Path   *core.Text
-	Name   *core.Text
-	Value  *core.Text
-	Editor *texteditor.Editor
-}
-
 var (
-	app     *core.Body
-	Details Item
-	panes   *core.Splits
+	app   *core.Body
+	panes *core.Splits
 )
 
 func main() {
@@ -74,8 +51,6 @@ func main() {
 						core.ErrorDialog(d, err, "Open File")
 					}
 				})
-				//fp.OnClose()
-				//log.Println(fp.SelectedFile())
 			})
 			d.RunDialog(b)
 		})
@@ -111,7 +86,11 @@ func addNodes(t *core.Tree, nodes []*TreeNode) {
 			item.ContextMenus = append(item.ContextMenus, keyContext)
 		}
 		//item.ValueTitle = strings.Join(node.Path, " ")
-		item.Name = strings.Join(node.Path, " ")
+		name := []string{}
+		for _, part := range node.Path {
+			name = append(name, string(part))
+		}
+		item.Name = strings.Join(name, "/")
 		item.OnSelect(func(e events.Event) {
 			updateDetails(item.Name)
 		})
@@ -122,59 +101,48 @@ func addNodes(t *core.Tree, nodes []*TreeNode) {
 func mainContext(m *core.Scene) {
 	button := core.NewButton(m).SetText("Create Bucket")
 	button.OnClick(func(e events.Event) {
-		createBucketDialog("", button)
+		createBucketDialog(TreeNode{}, button)
 	})
 }
 
 func keyContext(m *core.Scene) {
 	button := core.NewButton(m)
 	button.SetText("Delete Key").OnClick(func(e events.Event) {
-		path := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
-		deleteKeyDialog(path, button)
+		deleteKeyDialog(getNode(m), button)
 	})
 	core.NewButton(m).SetText("Move Key").OnClick(func(e events.Event) {
-		path := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
-		moveKeyDialog(path, button)
+		moveKeyDialog(getNode(m), button)
 	})
 	core.NewButton(m).SetText("Rename Key").OnClick(func(e events.Event) {
-		path := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
-		renameKeyDialog(path, button)
+		renameKeyDialog(getNode(m), button)
 	})
 	core.NewButton(m).SetText("Copy Key").OnClick(func(e events.Event) {
-		path := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
-		copyKeyDialog(path, button)
+		copyKeyDialog(getNode(m), button)
 	})
 }
 
 func bucketContext(m *core.Scene) {
 	button := core.NewButton(m).SetText("Create Bucket")
 	button.OnClick(func(e events.Event) {
-		path := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
-		createBucketDialog(path, button)
+		createBucketDialog(getNode(m), button)
 	})
 	core.NewButton(m).SetText("Delete Bucket").OnClick(func(e events.Event) {
-		path := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
-		deleteBucketDialog(path, button)
+		deleteBucketDialog(getNode(m), button)
 	})
 	core.NewButton(m).SetText("Empty Bucket").OnClick(func(e events.Event) {
-		path := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
-		emptyBucketDialog(path, button)
+		emptyBucketDialog(getNode(m), button)
 	})
 	core.NewButton(m).SetText("Add Key").OnClick(func(e events.Event) {
-		path := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
-		addKeyDialog(path, button)
+		addKeyDialog(getNode(m), button)
 	})
 	core.NewButton(m).SetText("Move Bucket").OnClick(func(e events.Event) {
-		path := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
-		moveBucketDialog(path, button)
+		moveBucketDialog(getNode(m), button)
 	})
 	core.NewButton(m).SetText("Rename Bucket").OnClick(func(e events.Event) {
-		path := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
-		renameBucketDialog(path, button)
+		renameBucketDialog(getNode(m), button)
 	})
 	core.NewButton(m).SetText("Copy Bucket").OnClick(func(e events.Event) {
-		path := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
-		copyBucketDialog(path, button)
+		copyBucketDialog(getNode(m), button)
 	})
 }
 
