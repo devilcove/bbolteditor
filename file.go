@@ -8,7 +8,7 @@ import (
 )
 
 func loadFile(filepath string) error {
-	db.Close()
+	closeDB()
 	if err := openDB(filepath); err != nil {
 		return err
 	}
@@ -21,7 +21,7 @@ func reload() {
 	path := strings.Split(dbFile, "/")
 	root := path[len(path)-1]
 	nodes := getNodes()
-	panes.AsFrame().NodeBase.DeleteChildren()
+	panes.AsFrame().DeleteChildren()
 	left := core.NewFrame(panes)
 	core.NewFrame(panes)
 	tr := core.NewTree(left).SetText(root)
@@ -29,8 +29,5 @@ func reload() {
 	tr.Scene.ContextMenus = nil
 	tr.ContextMenus = nil
 	tr.SetReadOnly(true)
-	//tr.Update()
-	//panes.Update()
-	log.Println("updating app window")
 	app.Update()
 }

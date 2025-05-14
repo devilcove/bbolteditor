@@ -12,8 +12,8 @@ import (
 var (
 	db             *bbolt.DB
 	dbFile         string
-	invalidPathErr = errors.New("invalid path")
-	keyExistsErr   = errors.New("key exists")
+	errInvalidPath = errors.New("invalid path")
+	errKeyExists   = errors.New("key exists")
 	nodeMap        = make(map[string]TreeNode)
 )
 
@@ -49,8 +49,11 @@ func mapNodes(nodes []*TreeNode) {
 
 func getNodes() []*TreeNode {
 	allNodes := []*TreeNode{}
-	db.View(func(tx *bbolt.Tx) error {
-		tx.ForEach(func(name []byte, b *bbolt.Bucket) error {
+	if db == nil {
+		return allNodes
+	}
+	db.View(func(tx *bbolt.Tx) error { //nolint:errcheck
+		tx.ForEach(func(name []byte, b *bbolt.Bucket) error { //nolint:errcheck
 			nodes := process(name, nil, b)
 			allNodes = append(allNodes, nodes...)
 			return nil
@@ -69,10 +72,8 @@ func process(name []byte, path Path, b *bbolt.Bucket) []*TreeNode {
 		Name:     name,
 		IsBucket: true,
 	}
-	b.ForEach(func(k, v []byte) error {
-		//log.Println("checking", string(k), string(v))
+	b.ForEach(func(k, v []byte) error { //nolint:errcheck
 		if v != nil {
-			//log.Println("key child", "key:", string(k), "value:", v, v == nil)
 			child := &TreeNode{
 				Path:     append(path, k),
 				IsBucket: false,
@@ -81,7 +82,6 @@ func process(name []byte, path Path, b *bbolt.Bucket) []*TreeNode {
 			}
 			node.Children = append(node.Children, child)
 		} else {
-			//log.Println("bucket child", string(k))
 			nested := b.Bucket(k)
 			children := process(k, path, nested)
 			node.Children = append(node.Children, children...)
@@ -89,7 +89,6 @@ func process(name []byte, path Path, b *bbolt.Bucket) []*TreeNode {
 		return nil
 	})
 	nodes = append(nodes, node)
-	//log.Println("add node", string(node.Name), node.Path, node.IsBucket)
 	return nodes
 }
 
@@ -97,15 +96,16 @@ func CreateBucket(path Path) (*bbolt.Bucket, error) {
 	log.Println("Create Bucket", pathToString(path))
 	var bucket *bbolt.Bucket
 	if path == nil {
-		return nil, invalidPathErr
+		return nil, errInvalidPath
 	}
-	err := db.Update(func(tx *bbolt.Tx) (err error) {
-		bucket, err = tx.CreateBucketIfNotExists([]byte(path[0]))
+	err := db.Update(func(tx *bbolt.Tx) error {
+		var err error
+		bucket, err = tx.CreateBucketIfNotExists(path[0])
 		if err != nil {
 			return err
 		}
 		for _, p := range path[1:] {
-			bucket, err = bucket.CreateBucketIfNotExists([]byte(p))
+			bucket, err = bucket.CreateBucketIfNotExists(p)
 			if err != nil {
 				return err
 			}
@@ -116,12 +116,12 @@ func CreateBucket(path Path) (*bbolt.Bucket, error) {
 }
 
 func createBucket(path Path, tx *bbolt.Tx) (*bbolt.Bucket, error) {
-	bucket, err := tx.CreateBucketIfNotExists([]byte(path[0]))
+	bucket, err := tx.CreateBucketIfNotExists(path[0])
 	if err != nil {
 		return bucket, err
 	}
 	for _, p := range path[1:] {
-		bucket, err = bucket.CreateBucketIfNotExists([]byte(p))
+		bucket, err = bucket.CreateBucketIfNotExists(p)
 		if err != nil {
 			return bucket, err
 		}
@@ -130,37 +130,23 @@ func createBucket(path Path, tx *bbolt.Tx) (*bbolt.Bucket, error) {
 }
 
 func CreateKey(name string, value []byte, path Path) error {
-	log.Println("Create Key", path, name, value)
+	log.Println("Create Key", pathToString(path), name, string(value))
 	return db.Update(func(tx *bbolt.Tx) error {
 		bucket, err := createBucket(path, tx)
 		if err != nil {
 			return err
 		}
 		if bucket.Get([]byte(name)) != nil {
-			return keyExistsErr
+			return errKeyExists
 		}
 		return bucket.Put([]byte(name), value)
 	})
 }
 
-func addBucket(path Path, tx *bbolt.Tx) (*bbolt.Bucket, error) {
-	if len(path) == 0 {
-		return nil, invalidPathErr
-	}
-	if len(path) == 1 {
-		return tx.CreateBucket([]byte(path[0]))
-	}
-	bucket, err := getParentBucket(path, tx)
-	if err != nil {
-		return nil, err
-	}
-	return bucket.CreateBucket([]byte(path[len(path)-1]))
-}
-
 func DeleteBucket(path Path) error {
 	log.Println("Delete bucket", path)
 	if path == nil {
-		return invalidPathErr
+		return errInvalidPath
 	}
 	return db.Update(func(tx *bbolt.Tx) error {
 		return deleteBucket(path, tx)
@@ -169,7 +155,7 @@ func DeleteBucket(path Path) error {
 
 func deleteBucket(path Path, tx *bbolt.Tx) error {
 	log.Println("delete bucket", path)
-	name := []byte(path[len(path)-1])
+	name := path[len(path)-1]
 	parent, err := getParentBucket(path, tx)
 	if err != nil {
 		return err
@@ -219,13 +205,13 @@ func RenameBucket(path Path, newName string) error {
 			if err != nil {
 				return err
 			}
-			oldBucket = tx.Bucket([]byte(currentName))
+			oldBucket = tx.Bucket(currentName)
 		} else {
 			newBucket, err = parent.CreateBucket([]byte(newName))
 			if err != nil {
 				return err
 			}
-			oldBucket = parent.Bucket([]byte(currentName))
+			oldBucket = parent.Bucket(currentName)
 		}
 		err = oldBucket.ForEach(func(k, v []byte) error {
 			return newBucket.Put(k, v)
@@ -234,9 +220,9 @@ func RenameBucket(path Path, newName string) error {
 			return err
 		}
 		if parent == nil {
-			return tx.DeleteBucket([]byte(currentName))
+			return tx.DeleteBucket(currentName)
 		}
-		return parent.DeleteBucket([]byte(currentName))
+		return parent.DeleteBucket(currentName)
 	})
 }
 
@@ -249,16 +235,16 @@ func RenameKey(path Path, newName string) error {
 		}
 		existing := bucket.Get([]byte(newName))
 		if existing != nil {
-			return keyExistsErr
+			return errKeyExists
 		}
-		key := bucket.Get([]byte(currentName))
+		key := bucket.Get(currentName)
 		if key == nil {
-			return invalidPathErr
+			return errInvalidPath
 		}
 		if err := bucket.Put([]byte(newName), key); err != nil {
 			return err
 		}
-		return bucket.Delete([]byte(currentName))
+		return bucket.Delete(currentName)
 	})
 }
 
@@ -275,28 +261,28 @@ func DeleteKey(path Path) error {
 		if err != nil {
 			return err
 		}
-		return bucket.Delete([]byte(path[len(path)-1]))
+		return bucket.Delete(path[len(path)-1])
 	})
 }
 
 func getParentBucket(path Path, tx *bbolt.Tx) (*bbolt.Bucket, error) {
 	if len(path) == 1 {
-		//parent is root
-		return nil, nil
+		// parent is root
+		return nil, nil //nolint:nilnil
 	}
 	return getBucket(path[:len(path)-1], tx)
 }
 
 func getBucket(path Path, tx *bbolt.Tx) (*bbolt.Bucket, error) {
-	bucket := tx.Bucket([]byte(path[0]))
+	bucket := tx.Bucket(path[0])
 	if bucket == nil {
-		return &bbolt.Bucket{}, invalidPathErr
+		return &bbolt.Bucket{}, errInvalidPath
 	}
 	for _, p := range path[1:] {
-		bucket = bucket.Bucket([]byte(p))
+		bucket = bucket.Bucket(p)
 	}
 	if bucket == nil {
-		return &bbolt.Bucket{}, invalidPathErr
+		return &bbolt.Bucket{}, errInvalidPath
 	}
 	return bucket, nil
 }
@@ -306,7 +292,7 @@ func CopyBucket(old, new Path) error {
 	bucketName := old[len(old)-1]
 	return db.Update(func(tx *bbolt.Tx) error {
 		if len(old) == 1 {
-			bucket := tx.Bucket([]byte(bucketName))
+			bucket := tx.Bucket(bucketName)
 			return copyBucket(bucket, new, tx)
 		}
 		bucket, err := getBucket(old, tx)
@@ -322,7 +308,7 @@ func MoveBucket(old, new Path) error {
 	bucketName := old[len(old)-1]
 	return db.Update(func(tx *bbolt.Tx) error {
 		if len(old) == 1 {
-			bucket := tx.Bucket([]byte(bucketName))
+			bucket := tx.Bucket(bucketName)
 			if err := copyBucket(bucket, new, tx); err != nil {
 				return err
 			}
@@ -348,12 +334,12 @@ func copyBucket(bucket *bbolt.Bucket, path Path, tx *bbolt.Tx) error {
 	}
 	// target is root bucket
 	if parent == nil {
-		newBucket, err = tx.CreateBucket([]byte(name))
+		newBucket, err = tx.CreateBucket(name)
 		if err != nil {
 			return err
 		}
 	} else {
-		newBucket, err = parent.CreateBucket([]byte(name))
+		newBucket, err = parent.CreateBucket(name)
 		if err != nil {
 			return err
 		}
@@ -376,23 +362,23 @@ func MoveKey(old, new Path) error {
 		if err != nil {
 			return err
 		}
-		oldValue := parent.Get([]byte(keyName))
+		oldValue := parent.Get(keyName)
 		if oldValue == nil {
-			return invalidPathErr
+			return errInvalidPath
 		}
 		newParent, err := createBucket(new[:len(new)-1], tx)
 		if err != nil {
 			return err
 		}
-		//check if key exists
-		v := newParent.Get([]byte(newName))
+		// check if key exists
+		v := newParent.Get(newName)
 		if v != nil {
-			return keyExistsErr
+			return errKeyExists
 		}
-		if err := newParent.Put([]byte(newName), v); err != nil {
+		if err := newParent.Put(newName, v); err != nil {
 			return err
 		}
-		return parent.Delete([]byte(keyName))
+		return parent.Delete(keyName)
 	})
 }
 
@@ -404,19 +390,19 @@ func CopyKey(current, new Path) error {
 		if err != nil {
 			return err
 		}
-		value := parent.Get([]byte(currentName))
+		value := parent.Get(currentName)
 		if value == nil {
-			return invalidPathErr
+			return errInvalidPath
 		}
 		newParent, err := createBucket(new[:len(new)-1], tx)
 		if err != nil {
 			return err
 		}
-		exists := parent.Get([]byte(newName))
+		exists := parent.Get(newName)
 		if exists != nil {
-			return keyExistsErr
+			return errKeyExists
 		}
-		return newParent.Put([]byte(newName), value)
+		return newParent.Put(newName, value)
 	})
 }
 
@@ -428,5 +414,4 @@ func UpdateKey(node TreeNode, value []byte) error {
 		}
 		return parent.Put(node.Name, value)
 	})
-
 }

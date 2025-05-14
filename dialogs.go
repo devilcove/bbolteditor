@@ -39,11 +39,9 @@ func deleteBucketDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Delete Bucket")
 	core.NewText(d).SetText("Path")
 	core.NewTextField(d).SetText(pathToString(node.Path))
-	//deletePath := core.NewTextField(d).SetText(pathToString(node.Path))
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			//path := strings.Split(deletePath.Text(), " ")
 			if err := DeleteBucket(node.Path); err != nil {
 				core.ErrorDialog(button, err, "Delete Bucket")
 				return

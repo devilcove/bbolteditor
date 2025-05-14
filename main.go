@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,25 +11,35 @@ import (
 
 	"cogentcore.org/core/core"
 	"cogentcore.org/core/events"
+	"cogentcore.org/core/events/key"
 	"cogentcore.org/core/filetree"
 	"cogentcore.org/core/icons"
 	"cogentcore.org/core/texteditor"
 	"cogentcore.org/core/tree"
+	berrors "go.etcd.io/bbolt/errors"
 )
 
 var (
-	app   *core.Body
-	panes *core.Splits
+	app           *core.Body
+	panes         *core.Splits
+	databaseInUse = "Database file is locked. Is the database in use by another application?"
 )
 
 func main() {
 	log.SetFlags(log.Lshortfile)
-	openDB("test.db")
-	nodes := getNodes()
 	app = core.NewBody("BboltEdit")
+	if err := openDB("test.db"); err != nil {
+		if errors.Is(err, berrors.ErrTimeout) {
+			space := core.NewSpace(app)
+			core.MessageDialog(space, "Database in use by another application", "Database Error")
+		} else {
+			log.Fatal(err)
+		}
+	}
+	nodes := getNodes()
 	core.NewToolbar(app).Maker(func(p *tree.Plan) {
 		tree.Add(p, func(w *core.Button) {
-			w.SetText("Open File").OnClick(func(e events.Event) {
+			w.SetText("File").OnClick(func(e events.Event) {
 				current, _ := os.Getwd()
 				d := core.NewBody("File")
 				ft := filetree.NewTree(d).OpenPath(current)
@@ -49,7 +60,11 @@ func main() {
 					d.AddOK(bar).OnClick(func(e events.Event) {
 						log.Println("open file ", selected)
 						if err := loadFile(selected); err != nil {
-							core.ErrorDialog(d, err, "Open File")
+							if errors.Is(err, berrors.ErrTimeout) {
+								core.MessageDialog(d, databaseInUse, "Open Database")
+							} else {
+								core.ErrorDialog(d, err, "Open File")
+							}
 						}
 					})
 				})
@@ -68,7 +83,7 @@ func main() {
 		})
 	})
 	core.NewSpace(app)
-	panes = core.NewSplits(app).SetSplits(.3, .7)
+	panes = core.NewSplits(app).SetSplits(.3, .7) //nolint:mnd
 	left := core.NewFrame(panes)
 	core.NewFrame(panes)
 
@@ -93,7 +108,6 @@ func addNodes(t *core.Tree, nodes []*TreeNode) {
 		} else {
 			item.ContextMenus = append(item.ContextMenus, keyContext)
 		}
-		//item.ValueTitle = strings.Join(node.Path, " ")
 		name := []string{}
 		for _, part := range node.Path {
 			name = append(name, string(part))
@@ -155,12 +169,11 @@ func bucketContext(m *core.Scene) {
 }
 
 func updateDetails(item string) {
-	log.Println("updating details for ", item)
 	node, ok := nodeMap[item]
 	if !ok {
 		log.Println("invalid node", item)
 	}
-	panes.AsFrame().NodeBase.DeleteChildAt(1)
+	panes.AsFrame().DeleteChildAt(1)
 	details := core.NewFrame(panes)
 	if node.IsBucket {
 		core.NewText(details).SetText("Bucket:")
@@ -171,11 +184,21 @@ func updateDetails(item string) {
 	core.NewText(details).SetText("Path:" + item)
 	core.NewText(details).SetText("Name:" + string(node.Name))
 	if !node.IsBucket {
+		var reset *core.Button
 		core.NewSpace(details)
 		value := pretty(node.Value)
-		buf := texteditor.NewEditor(details).Buffer.SetText(value)
+		te := texteditor.NewEditor(details)
+		buf := te.Buffer.SetText(value)
+		te.OnKeyChord(func(e events.Event) {
+
+			log.Println("changed", e.KeyChord())
+			if e.KeyCode() == key.CodeReturnEnter {
+				reset.SetFocus()
+			}
+		})
 		frame := core.NewFrame(details)
-		core.NewButton(frame).SetText("Reset").OnClick(func(e events.Event) {
+		reset = core.NewButton(frame).SetText("Reset")
+		reset.OnClick(func(e events.Event) {
 			buf.SetText(node.Value)
 		})
 		core.NewButton(frame).SetText("Validate Json").OnClick(func(e events.Event) {
