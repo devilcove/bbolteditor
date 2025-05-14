@@ -20,22 +20,28 @@ jobs:
         with:
           go-version-file: ./go.mod
       - name: Setup Core
-        run: go install cogentcore.org/core/cmd/core@main && sudo apt update && core setup
+        run: |
+          go install cogentcore.org/core/cmd/core@main
+          sudo apt update
+          core setup
+          go build cogentcore.org/core/core
       - name: Build
         run: |
           go version
-          go build -v  . 
-  
+          go build -v .
+
   lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: setup go
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
-      - name:  lint
+      - name: Tidy Go Modules
+        run: go mod tidy
+      - name: Lint
         uses: golangci/golangci-lint-action@v8
         with:
-          args: --timeout=5m
+          args: --timeout=5m --verbose          
