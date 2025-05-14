@@ -32,7 +32,7 @@ func openDB(file string) error {
 
 func closeDB() {
 	if db != nil {
-		db.Close()
+		db.Close() //nolint:errcheck
 	}
 }
 
