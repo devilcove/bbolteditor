@@ -94,7 +94,7 @@ func process(name []byte, path Path, b *bbolt.Bucket) []*TreeNode {
 }
 
 func CreateBucket(path Path) (*bbolt.Bucket, error) {
-	log.Println("Create Bucket", path)
+	log.Println("Create Bucket", pathToString(path))
 	var bucket *bbolt.Bucket
 	if path == nil {
 		return nil, invalidPathErr

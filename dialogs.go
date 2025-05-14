@@ -22,7 +22,7 @@ func createBucketDialog(node TreeNode, button *core.Button) {
 		d.AddOK(bar).OnClick(func(e events.Event) {
 			path := Path{}
 			if parent.Text() != "" {
-				stringToPath(parent.Text())
+				path = stringToPath(parent.Text())
 			}
 			path = append(path, []byte(name.Text()))
 			if _, err := CreateBucket(path); err != nil {
