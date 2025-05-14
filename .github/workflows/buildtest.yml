@@ -19,11 +19,11 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
+      - name: Setup Core
+        run: go install cogentcore.org/core/cmd/core@main && sudo apt update && core setup
       - name: Build
         run: |
           go version
-          go install cogentcore.org/core/cmd/core@main
-          go/bin/core setup
           go build -v  . 
   
   lint:
