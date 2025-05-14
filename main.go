@@ -13,6 +13,7 @@ import (
 	"cogentcore.org/core/filetree"
 	"cogentcore.org/core/icons"
 	"cogentcore.org/core/texteditor"
+	"cogentcore.org/core/tree"
 )
 
 var (
@@ -25,41 +26,48 @@ func main() {
 	openDB("test.db")
 	nodes := getNodes()
 	app = core.NewBody("BboltEdit")
-	b := core.NewButton(app).SetText("File")
-	b.SetMenu(func(m *core.Scene) {
-		core.NewButton(m).SetText("Open File").OnClick(func(e events.Event) {
-			current, _ := os.Getwd()
-			d := core.NewBody("File Open")
-			ft := filetree.NewTree(d).OpenPath(".")
-			selected := ""
-			ft.OnSelect(func(e events.Event) {
-				ft.SelectedFunc(func(n *filetree.Node) {
-					selected = string(n.Filepath)
+	core.NewToolbar(app).Maker(func(p *tree.Plan) {
+		tree.Add(p, func(w *core.Button) {
+			w.SetText("Open File").OnClick(func(e events.Event) {
+				current, _ := os.Getwd()
+				d := core.NewBody("File")
+				ft := filetree.NewTree(d).OpenPath(current)
+				selected := ""
+				ft.OnSelect(func(e events.Event) {
+					ft.SelectedFunc(func(n *filetree.Node) {
+						selected = string(n.Filepath)
+					})
 				})
+				d.AddBottomBar(func(bar *core.Frame) {
+					d.AddCancel(bar)
+					core.NewButton(bar).SetText("Open Parent").OnClick(func(e events.Event) {
+						current = filepath.Dir(current)
+						ft.DeleteChildren()
+						ft.OpenPath(current)
+						d.Update()
+					})
+					d.AddOK(bar).OnClick(func(e events.Event) {
+						log.Println("open file ", selected)
+						if err := loadFile(selected); err != nil {
+							core.ErrorDialog(d, err, "Open File")
+						}
+					})
+				})
+				d.RunDialog(w)
 			})
-			d.AddBottomBar(func(bar *core.Frame) {
-				d.AddCancel(bar)
-				core.NewButton(bar).SetText("Open Parent").OnClick(func(e events.Event) {
-					current = filepath.Dir(current)
-					ft.DeleteChildren()
-					ft.OpenPath(current)
-					d.Update()
-				})
-				d.AddOK(bar).OnClick(func(e events.Event) {
-					log.Println("open file ", selected)
-					if err := loadFile(selected); err != nil {
-						core.ErrorDialog(d, err, "Open File")
-					}
-				})
-			})
-			d.RunDialog(b)
 		})
-		core.NewButton(m).SetText("Quit").OnClick(func(e events.Event) {
-			app.Close()
+		tree.Add(p, func(w *core.Button) {
+			w.SetText("Settings").OnClick(func(e events.Event) {
+				core.SettingsWindow()
+			})
+		})
+		tree.Add(p, func(w *core.Button) {
+			w.SetText("Quit").OnClick(func(e events.Event) {
+				app.Close()
+			})
 		})
 	})
-	b.Scene.ContextMenus = nil
-
+	core.NewSpace(app)
 	panes = core.NewSplits(app).SetSplits(.3, .7)
 	left := core.NewFrame(panes)
 	core.NewFrame(panes)
