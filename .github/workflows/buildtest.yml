@@ -22,6 +22,8 @@ jobs:
       - name: Build
         run: |
           go version
+          go install cogentcore.org/core/cmd/core@main
+          go/bin/core setup
           go build -v  . 
   
   lint:
