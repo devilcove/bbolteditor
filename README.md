@@ -46,4 +46,3 @@ key value can be updated directly in details pane
 * Rename Key
 * Copy Key
 
-## GUI Library
