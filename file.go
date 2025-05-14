@@ -28,6 +28,7 @@ func reload() {
 	addNodes(tr, nodes)
 	tr.Scene.ContextMenus = nil
 	tr.ContextMenus = nil
+	tr.ContextMenus = append(tr.ContextMenus, mainContext)
 	tr.SetReadOnly(true)
 	app.Update()
 }

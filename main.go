@@ -27,8 +27,12 @@ var (
 
 func main() {
 	log.SetFlags(log.Lshortfile)
-	app = core.NewBody("BboltEdit")
-	if err := openDB("test.db"); err != nil {
+	app = core.NewBody("BboltEditor")
+	dbfile := "test.db"
+	if len(os.Args) == 2 {
+		dbfile = os.Args[1]
+	}
+	if err := openDB(dbfile); err != nil {
 		if errors.Is(err, berrors.ErrTimeout) {
 			space := core.NewSpace(app)
 			core.MessageDialog(space, "Database in use by another application", "Database Error")
@@ -103,9 +107,10 @@ func addNodes(t *core.Tree, nodes []*TreeNode) {
 		item.SetReadOnly(true)
 		item.ContextMenus = nil
 		if node.IsBucket {
-			item.SetIcon(icons.AddCircle)
+			item.SetIcon(icons.Colors)
 			item.ContextMenus = append(item.ContextMenus, bucketContext)
 		} else {
+			item.SetIcon(icons.KeyFill)
 			item.ContextMenus = append(item.ContextMenus, keyContext)
 		}
 		name := []string{}
