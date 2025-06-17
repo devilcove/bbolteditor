@@ -41,6 +41,12 @@ jobs:
           go-version-file: ./go.mod
       - name: Tidy Go Modules
         run: go mod tidy
+      - name: Setup Core
+        run: |
+          go install cogentcore.org/core/cmd/core@main
+          sudo apt update
+          core setup
+          go build cogentcore.org/core/core
       - name: Lint
         uses: golangci/golangci-lint-action@v8
         with:
