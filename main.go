@@ -91,7 +91,7 @@ func main() {
 	left := core.NewFrame(panes)
 	core.NewFrame(panes)
 
-	tr := core.NewTree(left).SetText("test.db")
+	tr := core.NewTree(left).SetText(dbfile)
 	addNodes(tr, nodes)
 	tr.Scene.ContextMenus = nil
 	tr.ContextMenus = nil
@@ -105,6 +105,7 @@ func addNodes(t *core.Tree, nodes []*TreeNode) {
 	for _, node := range nodes {
 		item := core.NewTree(t).SetText(string(node.Name))
 		item.SetReadOnly(true)
+		item.SetClosed(true)
 		item.ContextMenus = nil
 		if node.IsBucket {
 			item.SetIcon(icons.Colors)
