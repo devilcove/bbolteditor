@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"strings"
 
 	"cogentcore.org/core/core"
@@ -21,7 +22,9 @@ func getNode(m *core.Scene) TreeNode {
 	name := strings.ReplaceAll(m.This.AsTree().Name, "-menu", "")
 	node, ok := nodeMap[name]
 	if !ok {
-		log.Println("invalid node", name)
+		logger := log.New(os.Stdout, "", log.Flags())
+		_ = logger.Output(2, "invalid node "+name)
+		node = selectedNode
 	}
 	return node
 }

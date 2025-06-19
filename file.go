@@ -30,5 +30,7 @@ func reload() {
 	tr.ContextMenus = nil
 	tr.ContextMenus = append(tr.ContextMenus, mainContext)
 	tr.SetReadOnly(true)
+	keyButton.SetEnabled(false)
+	bucketButton.SetEnabled(true)
 	app.Update()
 }

@@ -93,6 +93,9 @@ func process(name []byte, path Path, b *bbolt.Bucket) []*TreeNode {
 }
 
 func CreateBucket(path Path) (*bbolt.Bucket, error) {
+	if len(path[0]) == 0 {
+		return nil, errInvalidPath
+	}
 	log.Println("Create Bucket", pathToString(path))
 	var bucket *bbolt.Bucket
 	if path == nil {
@@ -116,6 +119,9 @@ func CreateBucket(path Path) (*bbolt.Bucket, error) {
 }
 
 func createBucket(path Path, tx *bbolt.Tx) (*bbolt.Bucket, error) {
+	if len(path[0]) == 0 {
+		return nil, errInvalidPath
+	}
 	bucket, err := tx.CreateBucketIfNotExists(path[0])
 	if err != nil {
 		return bucket, err
@@ -130,7 +136,9 @@ func createBucket(path Path, tx *bbolt.Tx) (*bbolt.Bucket, error) {
 }
 
 func CreateKey(name string, value []byte, path Path) error {
-	log.Println("Create Key", pathToString(path), name, string(value))
+	if len(path[0]) == 0 {
+		return errInvalidPath
+	}
 	return db.Update(func(tx *bbolt.Tx) error {
 		bucket, err := createBucket(path, tx)
 		if err != nil {
@@ -144,7 +152,9 @@ func CreateKey(name string, value []byte, path Path) error {
 }
 
 func DeleteBucket(path Path) error {
-	log.Println("Delete bucket", path)
+	if len(path[0]) == 0 {
+		return errInvalidPath
+	}
 	if path == nil {
 		return errInvalidPath
 	}
@@ -154,6 +164,9 @@ func DeleteBucket(path Path) error {
 }
 
 func deleteBucket(path Path, tx *bbolt.Tx) error {
+	if len(path[0]) == 0 {
+		return errInvalidPath
+	}
 	log.Println("delete bucket", path)
 	name := path[len(path)-1]
 	parent, err := getParentBucket(path, tx)
@@ -167,6 +180,9 @@ func deleteBucket(path Path, tx *bbolt.Tx) error {
 }
 
 func EmptyBucket(path Path) error {
+	if len(path[0]) == 0 {
+		return errInvalidPath
+	}
 	return db.Update(func(tx *bbolt.Tx) error {
 		bucket, err := getBucket(path, tx)
 		if err != nil {
@@ -185,6 +201,9 @@ func EmptyBucket(path Path) error {
 }
 
 func RenameItem(path Path, name string, isBucket bool) error {
+	if len(path[0]) == 0 {
+		return errInvalidPath
+	}
 	if isBucket {
 		return RenameBucket(path, name)
 	}
@@ -192,6 +211,9 @@ func RenameItem(path Path, name string, isBucket bool) error {
 }
 
 func RenameBucket(path Path, newName string) error {
+	if len(path[0]) == 0 {
+		return errInvalidPath
+	}
 	currentName := path[len(path)-1]
 	newBucket := &bbolt.Bucket{}
 	oldBucket := &bbolt.Bucket{}
@@ -227,6 +249,9 @@ func RenameBucket(path Path, newName string) error {
 }
 
 func RenameKey(path Path, newName string) error {
+	if len(path[0]) == 0 {
+		return errInvalidPath
+	}
 	currentName := path[len(path)-1]
 	return db.Update(func(tx *bbolt.Tx) error {
 		bucket, err := getParentBucket(path, tx)
@@ -256,6 +281,9 @@ func DeleteItem(n *TreeNode) error {
 }
 
 func DeleteKey(path Path) error {
+	if len(path[0]) == 0 {
+		return errInvalidPath
+	}
 	return db.Update(func(tx *bbolt.Tx) error {
 		bucket, err := getParentBucket(path, tx)
 		if err != nil {
@@ -274,6 +302,9 @@ func getParentBucket(path Path, tx *bbolt.Tx) (*bbolt.Bucket, error) {
 }
 
 func getBucket(path Path, tx *bbolt.Tx) (*bbolt.Bucket, error) {
+	if len(path[0]) == 0 {
+		return nil, errInvalidPath
+	}
 	bucket := tx.Bucket(path[0])
 	if bucket == nil {
 		return &bbolt.Bucket{}, errInvalidPath
@@ -288,6 +319,9 @@ func getBucket(path Path, tx *bbolt.Tx) (*bbolt.Bucket, error) {
 }
 
 func CopyBucket(old, new Path) error {
+	if len(old[0]) == 0 || len(new[0]) == 0 {
+		return errInvalidPath
+	}
 	log.Println("copy bucket", old, new)
 	bucketName := old[len(old)-1]
 	return db.Update(func(tx *bbolt.Tx) error {
@@ -304,6 +338,9 @@ func CopyBucket(old, new Path) error {
 }
 
 func MoveBucket(old, new Path) error {
+	if len(old[0]) == 0 || len(new[0]) == 0 {
+		return errInvalidPath
+	}
 	log.Println("move bucket", old, new)
 	bucketName := old[len(old)-1]
 	return db.Update(func(tx *bbolt.Tx) error {
@@ -326,6 +363,9 @@ func MoveBucket(old, new Path) error {
 }
 
 func copyBucket(bucket *bbolt.Bucket, path Path, tx *bbolt.Tx) error {
+	if len(path[0]) == 0 {
+		return errInvalidPath
+	}
 	newBucket := &bbolt.Bucket{}
 	name := path[len(path)-1]
 	parent, err := getParentBucket(path, tx)
@@ -355,6 +395,9 @@ func copyBucket(bucket *bbolt.Bucket, path Path, tx *bbolt.Tx) error {
 }
 
 func MoveKey(old, new Path) error {
+	if len(old[0]) == 0 || len(new[0]) == 0 {
+		return errInvalidPath
+	}
 	keyName := old[len(old)-1]
 	newName := new[len(new)-1]
 	return db.Update(func(tx *bbolt.Tx) error {
@@ -383,6 +426,9 @@ func MoveKey(old, new Path) error {
 }
 
 func CopyKey(current, new Path) error {
+	if len(current[0]) == 0 || len(new[0]) == 0 {
+		return errInvalidPath
+	}
 	currentName := current[len(current)-1]
 	newName := new[len(new)-1]
 	return db.Update(func(tx *bbolt.Tx) error {

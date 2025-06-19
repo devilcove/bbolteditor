@@ -22,11 +22,14 @@ import (
 var (
 	app           *core.Body
 	panes         *core.Splits
+	selectedNode  TreeNode
+	bucketButton  *core.Button
+	keyButton     *core.Button
 	databaseInUse = "Database file is locked. Is the database in use by another application?"
 )
 
 func main() {
-	log.SetFlags(log.Lshortfile)
+	log.SetFlags(log.Lshortfile | log.Ltime)
 	app = core.NewBody("BboltEditor")
 	dbfile := "test.db"
 	if len(os.Args) == 2 {
@@ -74,6 +77,14 @@ func main() {
 				})
 				d.RunDialog(w)
 			})
+		})
+		tree.Add(p, func(w *core.Button) {
+			w.SetText("Bucket").SetMenu(bucketContext)
+			bucketButton = w
+		})
+		tree.Add(p, func(w *core.Button) {
+			w.SetText("Key").SetMenu(keyContext).SetEnabled(false)
+			keyButton = w
 		})
 		tree.Add(p, func(w *core.Button) {
 			w.SetText("Settings").OnClick(func(e events.Event) {
@@ -179,12 +190,17 @@ func updateDetails(item string) {
 	if !ok {
 		log.Println("invalid node", item)
 	}
+	selectedNode = node
 	panes.AsFrame().DeleteChildAt(1)
 	details := core.NewFrame(panes)
 	if node.IsBucket {
 		core.NewText(details).SetText("Bucket:")
+		bucketButton.SetEnabled(true)
+		keyButton.SetEnabled(false)
 	} else {
 		core.NewText(details).SetText("Key:")
+		bucketButton.SetEnabled(false)
+		keyButton.SetEnabled(true)
 	}
 	core.NewSpace(details)
 	core.NewText(details).SetText("Path:" + item)
@@ -222,7 +238,7 @@ func updateDetails(item string) {
 			reload()
 		})
 	}
-	panes.Update()
+	app.Update()
 }
 
 func pretty(s []byte) []byte {

@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"path/filepath"
 	"strings"
 
 	"cogentcore.org/core/core"
@@ -156,12 +155,9 @@ func deleteKeyDialog(node TreeNode, button *core.Button) {
 }
 
 func renameKeyDialog(node TreeNode, button *core.Button) {
-	key := filepath.Base(pathToString(node.Path))
 	d := core.NewBody("Rename Key")
 	core.NewText(d).SetText("Path")
-	core.NewText(d).SetText(pathToString(node.Path))
-	core.NewText(d).SetText("Current Name")
-	core.NewText(d).SetText(key)
+	currentPath := core.NewTextField(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("New Name")
 	newName := core.NewTextField(d)
 	d.AddBottomBar(func(bar *core.Frame) {
@@ -171,7 +167,7 @@ func renameKeyDialog(node TreeNode, button *core.Button) {
 				core.ErrorDialog(button, errors.New("key name cannot contain spaces"), "Rename Key")
 				return
 			}
-			if err := RenameKey(node.Path, newName.Text()); err != nil {
+			if err := RenameKey(stringToPath(currentPath.Text()), newName.Text()); err != nil {
 				core.ErrorDialog(button, err, "Rename Key")
 				return
 			}
@@ -184,9 +180,7 @@ func renameKeyDialog(node TreeNode, button *core.Button) {
 func renameBucketDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Rename Bucket")
 	core.NewText(d).SetText("Path")
-	core.NewText(d).SetText(pathToString(node.Path))
-	core.NewText(d).SetText("Current Name")
-	core.NewText(d).SetText(filepath.Base(pathToString(node.Path)))
+	currentPath := core.NewTextField(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("New Name")
 	newName := core.NewTextField(d)
 	d.AddBottomBar(func(bar *core.Frame) {
@@ -196,7 +190,7 @@ func renameBucketDialog(node TreeNode, button *core.Button) {
 				core.ErrorDialog(button, errors.New("bucket name cannot contain spaces"), "Rename Bucket")
 				return
 			}
-			if err := RenameBucket(node.Path, newName.Text()); err != nil {
+			if err := RenameBucket(stringToPath(currentPath.Text()), newName.Text()); err != nil {
 				core.ErrorDialog(button, err, "Rename Bucket")
 				return
 			}
@@ -209,13 +203,13 @@ func renameBucketDialog(node TreeNode, button *core.Button) {
 func copyKeyDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Copy Key")
 	core.NewText(d).SetText("Key Path")
-	core.NewText(d).SetText(pathToString(node.Path))
+	currentPath := core.NewTextField(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("New Path")
 	newPath := core.NewTextField(d)
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			if err := CopyKey(node.Path, stringToPath(newPath.Text())); err != nil {
+			if err := CopyKey(stringToPath(currentPath.Text()), stringToPath(newPath.Text())); err != nil {
 				core.ErrorDialog(button, err, "Copy Key")
 				return
 			}
@@ -228,13 +222,14 @@ func copyKeyDialog(node TreeNode, button *core.Button) {
 func copyBucketDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Copy Bucket")
 	core.NewText(d).SetText("Bucket Path")
-	core.NewText(d).SetText(pathToString(node.Path))
+	currentPath := core.NewTextField(d).SetText(pathToString(node.Path))
 	core.NewText(d).SetText("New Path")
 	newPath := core.NewTextField(d)
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			if err := CopyBucket(node.Path, stringToPath(newPath.Text())); err != nil {
+			node.Path = stringToPath(currentPath.Text())
+			if err := CopyBucket(stringToPath(currentPath.Text()), stringToPath(newPath.Text())); err != nil {
 				core.ErrorDialog(button, err, "Copy Bucket")
 				return
 			}
