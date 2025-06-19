@@ -15,6 +15,8 @@ The main window consists of a toolbar, a tree view of buckets/keys and a details
 the toolbar provides buttons to 
 * open file selection dialog
 * open settings dialog
+* open bucket actions menu
+* open key actions menu
 * quit application
 
 ## Database Tree
