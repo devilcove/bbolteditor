@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	cogentcore.org/core v0.3.10
-	go.etcd.io/bbolt v1.4.1
+	go.etcd.io/bbolt v1.4.2
 )
 
 require (
