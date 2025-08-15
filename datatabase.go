@@ -32,7 +32,7 @@ func openDB(file string) error {
 
 func closeDB() {
 	if db != nil {
-		db.Close() //nolint:errcheck
+		db.Close()
 	}
 }
 
@@ -386,7 +386,7 @@ func copyBucket(bucket *bbolt.Bucket, path Path, tx *bbolt.Tx) error {
 	}
 	return bucket.ForEach(func(k, v []byte) error {
 		if v == nil {
-			newpath := append(path, k)
+			newpath := append(path, k) //nolint:gocritic
 			nested := bucket.Bucket(k)
 			return copyBucket(nested, newpath, tx)
 		}

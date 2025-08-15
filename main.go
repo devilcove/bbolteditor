@@ -28,7 +28,7 @@ var (
 	databaseInUse = "Database file is locked. Is the database in use by another application?"
 )
 
-func main() {
+func main() { //nolint:funlen
 	log.SetFlags(log.Lshortfile | log.Ltime)
 	app = core.NewBody("BboltEditor")
 	dbfile := "test.db"
@@ -212,7 +212,6 @@ func updateDetails(item string) {
 		te := texteditor.NewEditor(details)
 		buf := te.Buffer.SetText(value)
 		te.OnKeyChord(func(e events.Event) {
-
 			log.Println("changed", e.KeyChord())
 			if e.KeyCode() == key.CodeReturnEnter {
 				reset.SetFocus()

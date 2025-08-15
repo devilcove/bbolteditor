@@ -154,7 +154,7 @@ func deleteKeyDialog(node TreeNode, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func renameKeyDialog(node TreeNode, button *core.Button) {
+func renameKeyDialog(node TreeNode, button *core.Button) { //nolint:dupl
 	d := core.NewBody("Rename Key")
 	core.NewText(d).SetText("Path")
 	currentPath := core.NewTextField(d).SetText(pathToString(node.Path))
@@ -177,7 +177,7 @@ func renameKeyDialog(node TreeNode, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func renameBucketDialog(node TreeNode, button *core.Button) {
+func renameBucketDialog(node TreeNode, button *core.Button) { //nolint: dupl
 	d := core.NewBody("Rename Bucket")
 	core.NewText(d).SetText("Path")
 	currentPath := core.NewTextField(d).SetText(pathToString(node.Path))

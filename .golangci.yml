@@ -1,0 +1,47 @@
+version: "2"
+linters:
+  default: all
+  disable:
+    - depguard
+    - exhaustruct
+    - err113
+    - forbidigo
+    - gochecknoglobals
+    - nlreturn
+    - noinlineerr
+    - revive
+    - varnamelen
+    - wrapcheck
+    - wsl
+    - wsl_v5
+  settings:
+    predeclared:
+      ignore:
+        - new
+    mnd:
+      ignored-numbers:
+       - '2'
+       - '0o666'
+  exclusions:
+    generated: lax
+    presets:
+      #- comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
