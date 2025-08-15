@@ -22,8 +22,8 @@ jobs:
       - name: Setup Core
         run: |
           go install cogentcore.org/core@main
-          apt update
-          apt install xorg-dev -y
+          sudo apt update
+          sudo apt install xorg-dev -y
       - name: Build
         run: |
           go version
@@ -43,8 +43,8 @@ jobs:
       - name: Setup Core
         run: |
           go install cogentcore.org/core@main
-          apt update
-          apt install xorg-dev -y
+          sudo apt update
+          sudo apt install xorg-dev -y
       - name: Lint
         uses: golangci/golangci-lint-action@v8
         with:
