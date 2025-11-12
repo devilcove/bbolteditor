@@ -46,6 +46,6 @@ jobs:
           sudo apt update
           sudo apt install xorg-dev -y
       - name: Lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           args: --timeout=5m --verbose          
