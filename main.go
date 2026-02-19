@@ -14,7 +14,7 @@ import (
 	"cogentcore.org/core/events/key"
 	"cogentcore.org/core/filetree"
 	"cogentcore.org/core/icons"
-	"cogentcore.org/core/texteditor"
+	"cogentcore.org/core/text/textcore"
 	"cogentcore.org/core/tree"
 	berrors "go.etcd.io/bbolt/errors"
 )
@@ -209,8 +209,8 @@ func updateDetails(item string) {
 		var reset *core.Button
 		core.NewSpace(details)
 		value := pretty(node.Value)
-		te := texteditor.NewEditor(details)
-		buf := te.Buffer.SetText(value)
+		te := textcore.NewEditor(details)
+		buf := te.Lines.SetText(value)
 		te.OnKeyChord(func(e events.Event) {
 			log.Println("changed", e.KeyChord())
 			if e.KeyCode() == key.CodeReturnEnter {

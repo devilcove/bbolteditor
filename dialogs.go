@@ -7,7 +7,7 @@ import (
 
 	"cogentcore.org/core/core"
 	"cogentcore.org/core/events"
-	"cogentcore.org/core/texteditor"
+	"cogentcore.org/core/text/textcore"
 )
 
 func createBucketDialog(node TreeNode, button *core.Button) {
@@ -75,7 +75,7 @@ func addKeyDialog(node TreeNode, button *core.Button) {
 	core.NewText(d).SetText("Key Name")
 	name := core.NewTextField(d)
 	core.NewText(d).SetText("Key Value")
-	value := texteditor.NewEditor(d).Buffer
+	value := textcore.NewEditor(d).Lines
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		core.NewButton(bar).SetText("validate json").OnClick(func(e events.Event) {

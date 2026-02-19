@@ -3,16 +3,8 @@ module github.com/devilcove/bboltEditor
 go 1.25.6
 
 require (
-<<<<<<< /tmp/ec-local-594326393
 	cogentcore.org/core v0.3.18
 	go.etcd.io/bbolt v1.4.3
-||||||| /tmp/ec-base-1777736998
-	cogentcore.org/core v0.3.10
-	go.etcd.io/bbolt v1.4.2
-=======
-	cogentcore.org/core v0.3.10
-	go.etcd.io/bbolt v1.4.3
->>>>>>> /tmp/ec-remote-544537001
 )
 
 require (
@@ -38,6 +30,7 @@ require (
 	github.com/hack-pad/hackpadfs v0.2.4 // indirect
 	github.com/hack-pad/safejs v0.1.1 // indirect
 	github.com/jackmordaunt/icns/v2 v2.2.7 // indirect
+	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade // indirect
 	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
