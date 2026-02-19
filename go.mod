@@ -3,8 +3,16 @@ module github.com/devilcove/bboltEditor
 go 1.25.6
 
 require (
+<<<<<<< /tmp/ec-local-594326393
 	cogentcore.org/core v0.3.18
 	go.etcd.io/bbolt v1.4.3
+||||||| /tmp/ec-base-1777736998
+	cogentcore.org/core v0.3.10
+	go.etcd.io/bbolt v1.4.2
+=======
+	cogentcore.org/core v0.3.10
+	go.etcd.io/bbolt v1.4.3
+>>>>>>> /tmp/ec-remote-544537001
 )
 
 require (
