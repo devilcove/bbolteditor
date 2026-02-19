@@ -39,8 +39,8 @@ func pathToString(path Path) string {
 
 func stringToPath(s string) Path {
 	path := Path{}
-	array := strings.Split(s, "/")
-	for _, part := range array {
+	array := strings.SplitSeq(s, "/")
+	for part := range array {
 		path = append(path, []byte(part))
 	}
 	return path
