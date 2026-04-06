@@ -1,7 +1,7 @@
 codeberg.org/go-pdf/fpdf v0.11.0 h1:n3I8WISQ1cr0S2rvx9DOlE/GypbcimMWqLpel3slHmY=
 codeberg.org/go-pdf/fpdf v0.11.0/go.mod h1:Y0DGRAdZ0OmnZPvjbMp/1bYxmIPxm0ws4tfoPOc4LjU=
-cogentcore.org/core v0.3.20 h1:Eyr4nrbYjteBjV1b863oPGA7zniqzSfYrVk34+IeU1g=
-cogentcore.org/core v0.3.20/go.mod h1:IQBEleZr+h6O/UjnymY875ve9kY0yokLK8YJ/JUPPBg=
+cogentcore.org/core v0.3.22 h1:wKOzPgrRhX7qV7WWrDE68gJaJ/x50f5wWm79/rx50YQ=
+cogentcore.org/core v0.3.22/go.mod h1:IQBEleZr+h6O/UjnymY875ve9kY0yokLK8YJ/JUPPBg=
 github.com/Bios-Marcel/wastebasket/v2 v2.0.3 h1:TkoDPcSqluhLGE+EssHu7UGmLgUEkWg7kNyHyyJ3Q9g=
 github.com/Bios-Marcel/wastebasket/v2 v2.0.3/go.mod h1:769oPCv6eH7ugl90DYIsWwjZh4hgNmMS3Zuhe1bH6KU=
 github.com/Masterminds/vcs v1.13.3 h1:IIA2aBdXvfbIM+yl/eTnL4hb1XwdpvuQLglAix1gweE=

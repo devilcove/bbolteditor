@@ -3,7 +3,7 @@ module github.com/devilcove/bboltEditor
 go 1.25.6
 
 require (
-	cogentcore.org/core v0.3.20
+	cogentcore.org/core v0.3.22
 	go.etcd.io/bbolt v1.4.3
 )
 
