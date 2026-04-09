@@ -16,6 +16,9 @@ linters:
     - wsl
     - wsl_v5
   settings:
+    gosec:
+      excludes:
+        - G706
     predeclared:
       ignore:
         - new
