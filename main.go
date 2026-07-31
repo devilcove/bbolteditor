@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"image"
 	"log"
 	"os"
 	"path/filepath"
@@ -28,7 +29,7 @@ var (
 	databaseInUse = "Database file is locked. Is the database in use by another application?"
 )
 
-func main() { //nolint:funlen
+func main() { //nolint:funlen //todo
 	log.SetFlags(log.Lshortfile | log.Ltime)
 	app = core.NewBody("BboltEditor")
 	dbfile := "test.db"
@@ -98,7 +99,7 @@ func main() { //nolint:funlen
 		})
 	})
 	core.NewSpace(app)
-	panes = core.NewSplits(app).SetSplits(.3, .7) //nolint:mnd
+	panes = core.NewSplits(app).SetSplits(.3, .7) //nolint:mnd //percentages
 	left := core.NewFrame(panes)
 	core.NewFrame(panes)
 
@@ -137,14 +138,14 @@ func addNodes(t *core.Tree, nodes []*TreeNode) {
 	}
 }
 
-func mainContext(m *core.Scene) {
+func mainContext(m *core.Scene, pos image.Point) {
 	button := core.NewButton(m).SetText("Create Bucket")
 	button.OnClick(func(e events.Event) {
 		createBucketDialog(TreeNode{}, button)
 	})
 }
 
-func keyContext(m *core.Scene) {
+func keyContext(m *core.Scene, pos image.Point) {
 	button := core.NewButton(m)
 	button.SetText("Delete Key").OnClick(func(e events.Event) {
 		deleteKeyDialog(getNode(m), button)
@@ -160,7 +161,7 @@ func keyContext(m *core.Scene) {
 	})
 }
 
-func bucketContext(m *core.Scene) {
+func bucketContext(m *core.Scene, pos image.Point) {
 	button := core.NewButton(m).SetText("Create Bucket")
 	button.OnClick(func(e events.Event) {
 		createBucketDialog(getNode(m), button)
@@ -188,7 +189,7 @@ func bucketContext(m *core.Scene) {
 func updateDetails(item string) {
 	node, ok := nodeMap[item]
 	if !ok {
-		log.Println("invalid node", item)
+		log.Println("invalid node", item) //nolint:gosec //no taint
 	}
 	selectedNode = node
 	panes.AsFrame().DeleteChildAt(1)
@@ -248,7 +249,7 @@ func pretty(s []byte) []byte {
 	return data.Bytes()
 }
 
-func toJSON(orig []byte) []byte { //nolint:varnamelen
+func toJSON(orig []byte) []byte {
 	var temp any
 	if err := json.Unmarshal(orig, &temp); err != nil {
 		return orig
