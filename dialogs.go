@@ -108,7 +108,7 @@ func moveBucketDialog(node TreeNode, button *core.Button) {
 		d.AddOK(bar).OnClick(func(e events.Event) {
 			if err := MoveBucket(stringToPath(current.Text()),
 				stringToPath(newPath.Text())); err != nil {
-				core.ErrorDialog(button, err, "Add Key")
+				core.ErrorDialog(button, err, "Move Bucket")
 				return
 			}
 			reload()
@@ -128,7 +128,7 @@ func moveKeyDialog(node TreeNode, button *core.Button) {
 		d.AddOK(bar).OnClick(func(e events.Event) {
 			if err := MoveKey(stringToPath(current.Text()),
 				stringToPath(newPath.Text())); err != nil {
-				core.ErrorDialog(button, err, "Add Key")
+				core.ErrorDialog(button, err, "Move Key")
 				return
 			}
 			reload()
@@ -154,7 +154,7 @@ func deleteKeyDialog(node TreeNode, button *core.Button) {
 	d.RunDialog(button)
 }
 
-func renameKeyDialog(node TreeNode, button *core.Button) { //nolint:dupl
+func renameKeyDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Rename Key")
 	core.NewText(d).SetText("Path")
 	currentPath := core.NewTextField(d).SetText(pathToString(node.Path))
@@ -177,7 +177,7 @@ func renameKeyDialog(node TreeNode, button *core.Button) { //nolint:dupl
 	d.RunDialog(button)
 }
 
-func renameBucketDialog(node TreeNode, button *core.Button) { //nolint: dupl
+func renameBucketDialog(node TreeNode, button *core.Button) {
 	d := core.NewBody("Rename Bucket")
 	core.NewText(d).SetText("Path")
 	currentPath := core.NewTextField(d).SetText(pathToString(node.Path))
@@ -187,7 +187,8 @@ func renameBucketDialog(node TreeNode, button *core.Button) { //nolint: dupl
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
 			if strings.Contains(newName.Text(), " ") {
-				core.ErrorDialog(button, errors.New("bucket name cannot contain spaces"), "Rename Bucket")
+				core.ErrorDialog(button,
+					errors.New("bucket name cannot contain spaces"), "Rename Bucket")
 				return
 			}
 			if err := RenameBucket(stringToPath(currentPath.Text()), newName.Text()); err != nil {
@@ -209,7 +210,8 @@ func copyKeyDialog(node TreeNode, button *core.Button) {
 	d.AddBottomBar(func(bar *core.Frame) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
-			if err := CopyKey(stringToPath(currentPath.Text()), stringToPath(newPath.Text())); err != nil {
+			if err := CopyKey(stringToPath(currentPath.Text()),
+				stringToPath(newPath.Text())); err != nil {
 				core.ErrorDialog(button, err, "Copy Key")
 				return
 			}
@@ -229,7 +231,8 @@ func copyBucketDialog(node TreeNode, button *core.Button) {
 		d.AddCancel(bar)
 		d.AddOK(bar).OnClick(func(e events.Event) {
 			node.Path = stringToPath(currentPath.Text())
-			if err := CopyBucket(stringToPath(currentPath.Text()), stringToPath(newPath.Text())); err != nil {
+			if err := CopyBucket(stringToPath(currentPath.Text()),
+				stringToPath(newPath.Text())); err != nil {
 				core.ErrorDialog(button, err, "Copy Bucket")
 				return
 			}

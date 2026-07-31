@@ -1,12 +1,24 @@
 version: "2"
+run:
+  timeout: 5m
+
+formatters:
+  enable:
+    - gofumpt
+    - golines
+  settings:
+    gofumpt:
+      extra-rules: true
 linters:
   default: all
   disable:
     - depguard
     - exhaustruct
     - err113
+    - errcheck
     - forbidigo
     - gochecknoglobals
+    - gomodguard
     - nlreturn
     - noinlineerr
     - prealloc
@@ -16,36 +28,20 @@ linters:
     - wsl
     - wsl_v5
   settings:
-    gosec:
-      excludes:
-        - G706
-    predeclared:
-      ignore:
-        - new
+    dupl:
+      threshold: 180
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
     mnd:
       ignored-numbers:
        - '2'
        - '0o666'
-  exclusions:
-    generated: lax
-    presets:
-      #- comments
-      - common-false-positives
-      - legacy
-      - std-error-handling
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
-formatters:
-  enable:
-    - gci
-    - gofmt
-    - gofumpt
-    - goimports
-  exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
+    predeclared:
+      ignore:
+        - new
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

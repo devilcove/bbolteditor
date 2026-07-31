@@ -32,7 +32,7 @@ func openDB(file string) error {
 
 func closeDB() {
 	if db != nil {
-		db.Close()
+		db.Close() //nolint:gosec // error is unimportant
 	}
 }
 
@@ -52,8 +52,8 @@ func getNodes() []*TreeNode {
 	if db == nil {
 		return allNodes
 	}
-	db.View(func(tx *bbolt.Tx) error { //nolint:errcheck
-		tx.ForEach(func(name []byte, b *bbolt.Bucket) error { //nolint:errcheck
+	db.View(func(tx *bbolt.Tx) error { //nolint:gosec // no errors returned
+		tx.ForEach(func(name []byte, b *bbolt.Bucket) error { //nolint:gosec // no errors returned
 			nodes := process(name, nil, b)
 			allNodes = append(allNodes, nodes...)
 			return nil
@@ -72,7 +72,7 @@ func process(name []byte, path Path, b *bbolt.Bucket) []*TreeNode {
 		Name:     name,
 		IsBucket: true,
 	}
-	b.ForEach(func(k, v []byte) error { //nolint:errcheck
+	b.ForEach(func(k, v []byte) error { //nolint:gosec // no errors returned
 		if v != nil {
 			child := &TreeNode{
 				Path:     append(path, k),
@@ -296,7 +296,7 @@ func DeleteKey(path Path) error {
 func getParentBucket(path Path, tx *bbolt.Tx) (*bbolt.Bucket, error) {
 	if len(path) == 1 {
 		// parent is root
-		return nil, nil //nolint:nilnil
+		return nil, nil //nolint:nilnil //special case
 	}
 	return getBucket(path[:len(path)-1], tx)
 }
@@ -386,9 +386,9 @@ func copyBucket(bucket *bbolt.Bucket, path Path, tx *bbolt.Tx) error {
 	}
 	return bucket.ForEach(func(k, v []byte) error {
 		if v == nil {
-			newpath := append(path, k) //nolint:gocritic
+			path = append(path, k)
 			nested := bucket.Bucket(k)
-			return copyBucket(nested, newpath, tx)
+			return copyBucket(nested, path, tx)
 		}
 		return newBucket.Put(k, v)
 	})
