@@ -19,32 +19,14 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version-file: ./go.mod
-      - name: Setup Core
+      - name: Setup Cogent
         run: |
-          go install cogentcore.org/core@main
           sudo apt update
-          sudo apt install xorg-dev -y
+          sudo apt install -y gcc libgl1-mesa-dev libegl1-mesa-dev mesa-vulkan-drivers xorg-dev libwayland-dev libxkbcommon-dev
       - name: Build
         run: |
           go version
           go build -v .
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Setup Go
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: ./go.mod
-      - name: Tidy Go Modules
-        run: go mod tidy
-      - name: Setup Core
-        run: |
-          go install cogentcore.org/core@main
-          sudo apt update
-          sudo apt install xorg-dev -y
       - name: Lint
         uses: golangci/golangci-lint-action@v9
         with:
